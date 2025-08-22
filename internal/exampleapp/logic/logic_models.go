@@ -1,16 +1,14 @@
 package logic
 
-type NewJSONObject struct {
-	Object     string
-	SFObjectID string
-	SchemaID   string
-	UserID     string
+type NewUser struct {
+	EmailAddress string
+	FirstName    string
+	LastName     string
 }
 
-type JSONObject struct {
-	ID         int
-	Object     string
-	SFObjectID string
-	SchemaID   string
-	UserID     string
+type User struct {
+	ID           int
+	EmailAddress string
+	FirstName    string
+	LastName     string
 }

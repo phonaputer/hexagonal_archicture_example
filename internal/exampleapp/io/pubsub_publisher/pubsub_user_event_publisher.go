@@ -9,23 +9,24 @@ import (
 	"time"
 )
 
-type JSONObjectEventPublisher struct {
+type UserEventPublisher struct {
 	topic *pubsub.Topic
 }
 
-func NewJSONObjectEventPublisher(topic *pubsub.Topic) *JSONObjectEventPublisher {
-	return &JSONObjectEventPublisher{
+func NewUserEventPublisher(topic *pubsub.Topic) *UserEventPublisher {
+	return &UserEventPublisher{
 		topic: topic,
 	}
 }
 
-func (p *JSONObjectEventPublisher) PublishCreate(ctx context.Context, jsonObject *logic.JSONObject) error {
+func (p *UserEventPublisher) PublishCreate(ctx context.Context, user *logic.User) error {
 	// Map from business logic data model to GCP PubSub data model
 
-	event := &createEventJSON{
-		ID:           jsonObject.ID,
-		SFObjectID:   jsonObject.SFObjectID,
-		EndUserID:    jsonObject.UserID,
+	event := &createUserEventJSON{
+		ID:           user.ID,
+		EmailAddress: user.EmailAddress,
+		FirstName:    user.FirstName,
+		LastName:     user.LastName,
 		CreationTime: time.Now().Format(time.RFC3339),
 	}
 
@@ -46,10 +47,10 @@ func (p *JSONObjectEventPublisher) PublishCreate(ctx context.Context, jsonObject
 	return nil
 }
 
-func (p *JSONObjectEventPublisher) PublishDelete(ctx context.Context, id int) error {
+func (p *UserEventPublisher) PublishDelete(ctx context.Context, id int) error {
 	// Map from business logic data model to GCP PubSub data model
 
-	event := &deleteEventJSON{
+	event := &deleteUserEventJSON{
 		ID:           id,
 		DeletionTime: time.Now().Format(time.RFC3339),
 	}

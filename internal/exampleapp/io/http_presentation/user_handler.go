@@ -8,26 +8,26 @@ import (
 	"net/http"
 )
 
-type JSONObjectHandler struct {
-	crudService logic.JSONObjectCRUDService
-	validator   JSONObjectRequestValidator
+type UserHandler struct {
+	crudService logic.UserService
+	validator   UserRequestValidator
 }
 
-func NewJSONObjectHandler(
-	crudService logic.JSONObjectCRUDService,
-	validator JSONObjectRequestValidator,
-) *JSONObjectHandler {
-	return &JSONObjectHandler{
+func NewUserHandler(
+	crudService logic.UserService,
+	validator UserRequestValidator,
+) *UserHandler {
+	return &UserHandler{
 		crudService: crudService,
 		validator:   validator,
 	}
 }
 
-func (h *JSONObjectHandler) CreateNewObject(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	// I/O. Receive input in HTTP format. Parse and validate it matches the expected HTTP request data model.
 
-	requestData, err := h.validator.jsonObjectCreateRequest(r)
+	requestData, err := h.validator.userCreateRequest(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -35,17 +35,16 @@ func (h *JSONObjectHandler) CreateNewObject(w http.ResponseWriter, r *http.Reque
 
 	// Map HTTP data model to business logic data model
 
-	input := &logic.NewJSONObject{
-		Object:     requestData.JSONObject,
-		SFObjectID: requestData.SFObjectID,
-		SchemaID:   requestData.SchemaID,
-		UserID:     requestData.EndUserID,
+	input := &logic.NewUser{
+		EmailAddress: requestData.EmailAddress,
+		FirstName:    requestData.FirstName,
+		LastName:     requestData.LastName,
 	}
 
 	// Call into business logic
 
 	result, err := h.crudService.Create(r.Context(), input)
-	if errors.Is(err, logic.ErrObjectAlreadyExists) { // Map logic error to HTTP error
+	if errors.Is(err, logic.ErrUserAlreadyExists) { // Map logic error to HTTP error
 		w.WriteHeader(http.StatusConflict)
 		return
 	}
@@ -56,12 +55,11 @@ func (h *JSONObjectHandler) CreateNewObject(w http.ResponseWriter, r *http.Reque
 
 	// Map business logic result data model to HTTP response data model
 
-	responseBody := &jsonObjectResponse{
-		ID:         result.ID,
-		SchemaID:   result.SchemaID,
-		SFObjectID: result.SFObjectID,
-		EndUserID:  result.UserID,
-		JSONObject: result.Object,
+	responseBody := &userResponse{
+		ID:           result.ID,
+		FirstName:    result.FirstName,
+		LastName:     result.LastName,
+		EmailAddress: result.EmailAddress,
 	}
 
 	responseBytes, err := json.Marshal(responseBody)
@@ -80,11 +78,11 @@ func (h *JSONObjectHandler) CreateNewObject(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-func (h *JSONObjectHandler) DeleteByID(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 
 	// I/O. Receive input in HTTP format. Parse and validate it matches the expected HTTP request data model.
 
-	requestData, err := h.validator.jsonObjectDeleteRequest(r)
+	requestData, err := h.validator.userDeleteRequest(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -96,7 +94,7 @@ func (h *JSONObjectHandler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 	// Call into business logic
 
 	err = h.crudService.Delete(r.Context(), requestData.ID)
-	if errors.Is(err, logic.ErrObjectNotFound) { // Map logic error to HTTP error
+	if errors.Is(err, logic.ErrUserNotFound) { // Map logic error to HTTP error
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -112,11 +110,11 @@ func (h *JSONObjectHandler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *JSONObjectHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	// I/O. Receive input in HTTP format. Parse and validate it matches the expected HTTP request data model.
 
-	requestData, err := h.validator.jsonObjectGetByIDRequest(r)
+	requestData, err := h.validator.userGetByIDRequest(r)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -128,7 +126,7 @@ func (h *JSONObjectHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	// Call into business logic
 
 	result, err := h.crudService.GetByID(r.Context(), requestData.ID)
-	if errors.Is(err, logic.ErrObjectNotFound) { // Map logic error to HTTP error
+	if errors.Is(err, logic.ErrUserNotFound) { // Map logic error to HTTP error
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -139,12 +137,11 @@ func (h *JSONObjectHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 	// Map business logic result data model to HTTP response data model
 
-	responseBody := &jsonObjectResponse{
-		ID:         result.ID,
-		SchemaID:   result.SchemaID,
-		SFObjectID: result.SFObjectID,
-		EndUserID:  result.UserID,
-		JSONObject: result.Object,
+	responseBody := &userResponse{
+		ID:           result.ID,
+		FirstName:    result.FirstName,
+		LastName:     result.LastName,
+		EmailAddress: result.EmailAddress,
 	}
 
 	responseBytes, err := json.Marshal(responseBody)

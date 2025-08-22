@@ -15,26 +15,26 @@ func RunApplication() {
 	// Dependency injection
 
 	db := sqlx.MustOpen("mysql", "EXAMPLE MYSQL ADDRESS")
-	jsonObjectStorage := mysql_storage.NewJSONObjectStorage(db)
+	userStorage := mysql_storage.NewUserStorage(db)
 
 	ps, err := pubsub.NewClient(context.Background(), "EXAMPLE GCP PROJECT ID")
 	if err != nil {
 		panic(err)
 	}
-	topic := ps.Topic("json_objects")
+	topic := ps.Topic("users")
 
-	jsonObjectPublisher := pubsub_publisher.NewJSONObjectEventPublisher(topic)
+	userPublisher := pubsub_publisher.NewUserEventPublisher(topic)
 
-	service := logic.NewJSONObjectServiceLogic(jsonObjectStorage, jsonObjectPublisher)
+	service := logic.NewUserServiceLogic(userStorage, userPublisher)
 
-	requestValidator := http_presentation.NewJSONObjectRequestValidatorImpl()
-	handlers := http_presentation.NewJSONObjectHandler(service, requestValidator)
+	requestValidator := http_presentation.NewUserRequestValidatorImpl()
+	userHandlers := http_presentation.NewUserHandler(service, requestValidator)
 
 	// Configure and run simple HTTP server
 
-	http.HandleFunc("POST /json_objects", handlers.CreateNewObject)
-	http.HandleFunc("DELETE /json_objects", handlers.DeleteByID)
-	http.HandleFunc("GET /json_objects", handlers.GetByID)
+	http.HandleFunc("POST /users", userHandlers.Create)
+	http.HandleFunc("DELETE /users", userHandlers.DeleteByID)
+	http.HandleFunc("GET /users", userHandlers.GetByID)
 
 	err = http.ListenAndServe(":8080", nil)
 	if err != nil {
